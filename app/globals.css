@@ -336,6 +336,25 @@ body[data-bg="grain"]::before {
 }
 .v1-sett-btn:hover { background: var(--bg-2); color: var(--text); }
 .v1-sett-btn.danger:hover { color: #f87171; }
+.v1-sett-btn-primary {
+  background: var(--text) !important; color: var(--bg) !important;
+  border-color: transparent !important; font-weight: 500;
+}
+.v1-sett-btn-primary:hover { opacity: 0.85; }
+
+/* ── Settings auth prompt ── */
+.v1-settings-auth { gap: 12px; }
+.v1-sett-auth-title {
+  font-size: 12px; font-weight: 600; color: var(--text);
+}
+.v1-sett-input {
+  width: 100%; background: var(--bg-2); border: 1px solid var(--line);
+  color: var(--text); border-radius: 6px; padding: 7px 10px;
+  font-family: inherit; font-size: 12px; outline: none;
+  transition: border-color 0.15s;
+}
+.v1-sett-input:focus { border-color: var(--text-2); }
+.v1-sett-err { font-size: 11px; color: #f87171; }
 
 /* ── Tabs ── */
 .v1-tabs {

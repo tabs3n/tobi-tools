@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useHub } from './hub-context';
 import { ProjectCard, ProjectRow } from './project-card';
 import AddModal from './add-modal';
@@ -14,6 +14,70 @@ function stopAll(e) {
   e.nativeEvent?.stopImmediatePropagation();
 }
 
+// Mini password prompt shown inside the settings popup position
+function SettingsAuth({ onSuccess, onClose }) {
+  const { pwExists, tryUnlock, setupPassword } = useHub();
+  const [pw,  setPw]  = useState('');
+  const [pw2, setPw2] = useState('');
+  const [err, setErr] = useState('');
+  const inputRef = useRef(null);
+
+  useEffect(() => { setTimeout(() => inputRef.current?.focus(), 30); }, []);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setErr('');
+    if (pwExists) {
+      const ok = await tryUnlock(pw);
+      if (ok) onSuccess();
+      else setErr('Falsches Passwort.');
+    } else {
+      if (pw.length < 4) { setErr('Mindestens 4 Zeichen.'); return; }
+      if (pw !== pw2)    { setErr('Passwörter stimmen nicht überein.'); return; }
+      await setupPassword(pw);
+      onSuccess();
+    }
+  };
+
+  return (
+    <div className="v1-settings-panel v1-settings-auth" onClick={stopAll}>
+      <div className="v1-sett-auth-title">
+        {pwExists ? 'Einstellungen entsperren' : 'Passwort festlegen'}
+      </div>
+      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <input
+          ref={inputRef}
+          type="password"
+          value={pw}
+          onChange={e => setPw(e.target.value)}
+          placeholder={pwExists ? 'Passwort' : 'Neues Passwort'}
+          className="v1-sett-input"
+        />
+        {!pwExists && (
+          <input
+            type="password"
+            value={pw2}
+            onChange={e => setPw2(e.target.value)}
+            placeholder="Wiederholen"
+            className="v1-sett-input"
+          />
+        )}
+        {err && <div className="v1-sett-err">{err}</div>}
+        <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
+          <button type="button" className="v1-sett-btn" onClick={onClose}
+            style={{ flex: 1, textAlign: 'center' }}>
+            Abbrechen
+          </button>
+          <button type="submit" className="v1-sett-btn v1-sett-btn-primary"
+            style={{ flex: 1, textAlign: 'center' }}>
+            {pwExists ? 'Entsperren' : 'Festlegen'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function V1Hub({ theme, density, view, bg, onTheme, onDensity, onView, onBg }) {
   const hub = useHub();
   const [q,            setQ]            = useState('');
@@ -21,6 +85,10 @@ export default function V1Hub({ theme, density, view, bg, onTheme, onDensity, on
   const [adding,       setAdding]       = useState(false);
   const [menuFor,      setMenuFor]      = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // 'closed' | 'auth' | 'open'
+  const settingsState = settingsOpen
+    ? (hub.unlocked ? 'open' : 'auth')
+    : 'closed';
 
   // ⌘K / Ctrl+K → focus search
   useEffect(() => {
@@ -107,15 +175,20 @@ export default function V1Hub({ theme, density, view, bg, onTheme, onDensity, on
             </button>
           )}
 
-          {/* Settings — stopAll prevents the document close-listener from
-              firing on the same click that opened the panel */}
           <div className="v1-settings-wrap" onClick={stopAll}>
             <button
               className="v1-btn ghost"
               title="Einstellungen"
               onClick={() => setSettingsOpen(o => !o)}
             >⚙</button>
-            {settingsOpen && (
+
+            {settingsState === 'auth' && (
+              <SettingsAuth
+                onSuccess={() => {/* hub.unlocked is now true, re-render shows 'open' */}}
+                onClose={() => setSettingsOpen(false)}
+              />
+            )}
+            {settingsState === 'open' && (
               <SettingsPanel
                 theme={theme} density={density} bg={bg}
                 onTheme={onTheme} onDensity={onDensity} onBg={onBg}
