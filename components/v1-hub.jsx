@@ -147,6 +147,12 @@ export default function V1Hub({ theme, density, view, bg, onTheme, onDensity, on
     { k: 'hidden',   label: hub.unlocked ? '🔓 Versteckt' : '🔒 Versteckt' },
   ];
 
+  if (hub.loading) return (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--dim)', fontSize: 13 }}>
+      Laden…
+    </div>
+  );
+
   return (
     <div className={`v1 v1-${density}`}>
 
