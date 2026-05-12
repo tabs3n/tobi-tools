@@ -6,14 +6,26 @@ import { STATUS_META } from '@/lib/data';
 export default function ProjectMenu({ project, onClose }) {
   const { update, remove } = useHub();
 
+  // Every button is inside an <a> card — preventDefault stops the card's
+  // link from firing when a menu action is clicked.
+  const handle = (fn) => (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.nativeEvent?.stopImmediatePropagation();
+    fn();
+  };
+
   return (
-    <div className="tt-menu" onClick={e => e.stopPropagation()}>
+    <div
+      className="tt-menu"
+      onClick={e => { e.preventDefault(); e.stopPropagation(); e.nativeEvent?.stopImmediatePropagation(); }}
+    >
       <div className="tt-menu-sec">Status</div>
       {Object.entries(STATUS_META).map(([k, v]) => (
         <button
           key={k}
           className="tt-menu-item"
-          onClick={() => { update(project.id, { status: k }); onClose(); }}
+          onClick={handle(() => { update(project.id, { status: k }); onClose(); })}
         >
           <span className="tt-dot" style={{ background: v.dot }} />
           {v.label}
@@ -27,14 +39,14 @@ export default function ProjectMenu({ project, onClose }) {
 
       <button
         className="tt-menu-item"
-        onClick={() => { update(project.id, { hidden: !project.hidden }); onClose(); }}
+        onClick={handle(() => { update(project.id, { hidden: !project.hidden }); onClose(); })}
       >
         {project.hidden ? '🔓 Sichtbar machen' : '🔒 Verstecken'}
       </button>
 
       <button
         className="tt-menu-item"
-        onClick={() => { window.open(project.url, '_blank'); onClose(); }}
+        onClick={handle(() => { window.open(project.url, '_blank'); onClose(); })}
       >
         ↗ Öffnen
       </button>
@@ -43,9 +55,9 @@ export default function ProjectMenu({ project, onClose }) {
 
       <button
         className="tt-menu-item danger"
-        onClick={() => {
+        onClick={handle(() => {
           if (confirm('Projekt wirklich löschen?')) { remove(project.id); onClose(); }
-        }}
+        })}
       >
         Löschen
       </button>
