@@ -7,6 +7,13 @@ import AddModal from './add-modal';
 import PasswordGate from './password-gate';
 import SettingsPanel from './settings-panel';
 
+// Stop both React's synthetic bubbling AND the native DOM event so the
+// document-level "close all menus" listener doesn't fire immediately.
+function stopAll(e) {
+  e.stopPropagation();
+  e.nativeEvent?.stopImmediatePropagation();
+}
+
 export default function V1Hub({ theme, density, view, bg, onTheme, onDensity, onView, onBg }) {
   const hub = useHub();
   const [q,            setQ]            = useState('');
@@ -31,7 +38,7 @@ export default function V1Hub({ theme, density, view, bg, onTheme, onDensity, on
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
-  // Close menus on outside click
+  // Close all popups when clicking anywhere outside them
   useEffect(() => {
     const close = () => { setMenuFor(null); setSettingsOpen(false); };
     document.addEventListener('click', close);
@@ -95,17 +102,14 @@ export default function V1Hub({ theme, density, view, bg, onTheme, onDensity, on
 
         <div className="v1-actions">
           {hub.unlocked && (
-            <button
-              className="v1-btn ghost"
-              onClick={hub.lock}
-              title="Sperren"
-            >🔒</button>
+            <button className="v1-btn ghost" onClick={hub.lock} title="Sperren">
+              🔒
+            </button>
           )}
 
-          <div
-            className="v1-settings-wrap"
-            onClick={e => e.stopPropagation()}
-          >
+          {/* Settings — stopAll prevents the document close-listener from
+              firing on the same click that opened the panel */}
+          <div className="v1-settings-wrap" onClick={stopAll}>
             <button
               className="v1-btn ghost"
               title="Einstellungen"
@@ -170,7 +174,7 @@ export default function V1Hub({ theme, density, view, bg, onTheme, onDensity, on
               <ProjectCard
                 key={p.id} p={p}
                 menuOpen={menuFor === p.id}
-                onMenu={e => { e.stopPropagation(); setMenuFor(menuFor === p.id ? null : p.id); }}
+                onMenu={e => { stopAll(e); setMenuFor(menuFor === p.id ? null : p.id); }}
                 onCloseMenu={() => setMenuFor(null)}
               />
             ))}
@@ -181,7 +185,7 @@ export default function V1Hub({ theme, density, view, bg, onTheme, onDensity, on
               <ProjectRow
                 key={p.id} p={p}
                 menuOpen={menuFor === p.id}
-                onMenu={e => { e.stopPropagation(); setMenuFor(menuFor === p.id ? null : p.id); }}
+                onMenu={e => { stopAll(e); setMenuFor(menuFor === p.id ? null : p.id); }}
                 onCloseMenu={() => setMenuFor(null)}
               />
             ))}
