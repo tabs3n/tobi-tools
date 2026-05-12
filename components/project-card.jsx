@@ -43,7 +43,7 @@ export function ProjectCard({ p, menuOpen, onMenu, onCloseMenu }) {
           </span>
           <button
             className="v1-more"
-            onClick={onMenu}
+            onClick={e => { e.preventDefault(); onMenu(e); }}
             aria-label="Aktionen"
           >⋯</button>
           {menuOpen && <ProjectMenu project={p} onClose={onCloseMenu} />}
@@ -76,7 +76,7 @@ export function ProjectRow({ p, menuOpen, onMenu, onCloseMenu }) {
       <span className="v1-row-host">{hostOf(p.url)}</span>
       <button
         className="v1-more"
-        onClick={onMenu}
+        onClick={e => { e.preventDefault(); onMenu(e); }}
         aria-label="Aktionen"
       >⋯</button>
       {menuOpen && <ProjectMenu project={p} onClose={onCloseMenu} />}
